@@ -6,15 +6,20 @@ say "hello all!"
 
 while true; do 
 	cat out >> log.txt;
+   
+   gm=$(tail out | grep -iP 'goto');
+   if [ "$gm" ]; then
+      say "$(echo $gm | sed -r 's/goto/[REDACTED]/I')";
+   fi
 
-	sub=$(tail out | grep -oP 's/[^/]*/[^/]*/.?'); 
+	sub=$(tail out | grep -oP '^s/[^/]*/[^/]*/.?'); 
 	if [ "$sub" ]; then 
-		a=$(echo $sub | sed -r 's/s\/([^\/]*)\/([^\/]*)\/.?/\1/')
+		a=$(echo $sub | sed -r 's|s/([^/]*)/([^/]*)/.?|\1|')
 		#b=$(echo $sub | sed -r 's/s\/([^\/]*)\/([^\/]*)\/(g)?/\2/')
 		say "$(tac log.txt | head -n 11 | tail | grep -m 1 -E "$a" | sed -r "$sub")";
 	fi; 
 
-	die=$(tail out | grep -oPI 'botbot.[ \t]*d[0-9]*' | sed -r 's/[^0-9]*([0-9]*).*/\1/')
+	die=$(tail out | grep -oPI '.*\.d[0-9]*' | sed -r 's/[^0-9]*\.d([0-9]*).*/\1/')
 	if [ "$die" ]; then
 		say "You rolled $(( $RANDOM%$die+1))".
 	fi
@@ -35,6 +40,18 @@ while true; do
    if [ "$topic" ]; then
       topic=$(echo $topic | sed -r 's/.*\.t\s*//');
       echo "/t Intern Appreciation Chat: $topic"
+   fi
+   
+   date=$(tail out | grep -P '<.*>\s*\.date\s*.*');
+   if [ "$date" ]; then
+      args=$(echo $date | sed -r 's/.*\.date\s*(.*)/\1/')
+      say "$(date | head -c 180)"
+   fi
+   
+   cal=$(tail out | grep -P '<.*>\s*\.cal\s*.*');
+   if [ "$cal" ]; then
+      args=$(echo $cal | sed -r 's/.*\.cal\s*(.*)/\1/')
+      say "$(cal | head -c 180)"
    fi
 
 	echo -n > out; 
